@@ -13,7 +13,9 @@ export interface GenerateOptions {
   output?: string[];
   location?: string;
   org?: string;
+  enterprise?: string;
   token?: string;
+  user?: string;
 }
 
 export class GenerateCommand {
@@ -30,6 +32,7 @@ export class GenerateCommand {
       const config = await this.configManager.loadConfig();
 
       const org = options.org ?? config.org;
+      const enterprise = options.enterprise ?? config.enterprise;
       const token =
         options.token ??
         config.token ??
@@ -58,13 +61,40 @@ export class GenerateCommand {
 
       // Fetch usage data
       spinner.text = "Fetching Copilot usage from GitHub API...";
-      const usage = await this.dataFetcher.fetchUsage(org, token, options.date);
 
       // Get location
-      spinner.text = "Detecting location...";
       const location =
         options.location ??
         (await this.locationDetector.getLocation(config));
+
+      if (options.user) {
+        // Per-user receipt mode
+        const date = options.date ?? new Date().toISOString().slice(0, 10);
+        spinner.text = `Fetching per-user report for ${date}...`;
+        const users = await this.dataFetcher.fetchUserReports(org, token, date);
+        const target = users.find(
+          (u) => u.user_login.toLowerCase() === options.user!.toLowerCase(),
+        );
+
+        if (!target) {
+          spinner.fail(`User "${options.user}" not found in report for ${date}.`);
+          const logins = users.map((u) => u.user_login).join(", ");
+          console.error(chalk.red(`\nAvailable users: ${logins}`));
+          process.exit(1);
+        }
+
+        spinner.succeed(`Generated receipt for ${target.user_login}!`);
+        const receiptText = this.receiptGenerator.generateUserReceipt({
+          user: target,
+          location,
+          org,
+          config,
+        });
+        console.log("\n" + receiptText);
+        return;
+      }
+
+      const usage = await this.dataFetcher.fetchUsage(org, token, options.date, enterprise);
 
       const receiptData = {
         usage,

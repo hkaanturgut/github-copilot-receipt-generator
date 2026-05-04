@@ -4,6 +4,7 @@ import type { ReceiptConfig } from "../types/config.js";
 
 const VALID_KEYS: Array<keyof ReceiptConfig> = [
   "org",
+  "enterprise",
   "token",
   "location",
   "timezone",

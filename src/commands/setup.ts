@@ -39,6 +39,12 @@ export class SetupCommand {
         validate: (v: string) => (v.trim() ? true : "Organization is required"),
       },
       {
+        type: "text",
+        name: "enterprise",
+        message: "GitHub Enterprise slug (leave blank if not using enterprise):",
+        initial: "",
+      },
+      {
         type: "password",
         name: "token",
         message:
@@ -69,6 +75,7 @@ export class SetupCommand {
     const config: ReceiptConfig = {
       version: "1.0.0",
       org: answers.org,
+      enterprise: answers.enterprise || undefined,
       token: answers.token,
       location: answers.location || undefined,
       timezone: answers.timezone || undefined,

@@ -1,7 +1,8 @@
-import type { ParsedCopilotUsage } from "../types/copilot.js";
+import type { ParsedCopilotUsage, UserUsageRecord } from "../types/copilot.js";
 import type { ReceiptConfig } from "../types/config.js";
 import { formatPercent, formatNumber, formatDate } from "../utils/formatting.js";
 import { getHeader, SEPARATOR, LIGHT_SEPARATOR } from "../utils/ascii-art.js";
+import { estimateModelCost } from "../core/pricing.js";
 
 export interface ReceiptData {
   usage: ParsedCopilotUsage;
@@ -168,6 +169,82 @@ export class ReceiptGenerator {
     return lines.join("\n");
   }
 
+  /**
+   * Generate a per-user receipt with per-model pricing.
+   * Matches the style of the reference receipt image.
+   */
+  generateUserReceipt(data: {
+    user: UserUsageRecord;
+    location: string;
+    org: string;
+    config: ReceiptConfig;
+  }): string {
+    const lines: string[] = [];
+    const { user } = data;
+    const W = 40;
+    const SEP = "═".repeat(W);
+    const DASH = "─".repeat(W);
+
+    // Header
+    lines.push(getHeader());
+    lines.push("");
+
+    // Meta
+    lines.push(this.centerText(`Location: ${data.location}`, W));
+    lines.push(this.centerText(`User: ${user.user_login}`, W));
+    lines.push(this.centerText(`Org: ${data.org}`, W));
+    lines.push(this.centerText(formatDate(user.day, data.config.timezone), W));
+    lines.push("");
+
+    // Per-model sections with pricing (only models with activity)
+    let totalCost = 0;
+
+    for (const model of user.models) {
+      if (model.interactions === 0 && model.code_generation === 0 && model.code_acceptances === 0 && model.lines_added === 0 && model.lines_deleted === 0) {
+        continue;
+      }
+      const estimate = estimateModelCost(
+        model.model,
+        model.interactions,
+        model.code_generation,
+        model.lines_added,
+      );
+      totalCost += estimate.cost;
+
+      lines.push(SEP);
+      lines.push(this.rightAlign(
+        this.capitalize(model.model),
+        `$${estimate.cost.toFixed(2)}`,
+        W,
+      ));
+      lines.push(DASH);
+      lines.push(this.rightAlign("Interactions", formatNumber(model.interactions), W));
+      lines.push(this.rightAlign("Code generations", formatNumber(model.code_generation), W));
+      lines.push(this.rightAlign("Acceptances", formatNumber(model.code_acceptances), W));
+      lines.push(this.rightAlign("Input tokens", formatNumber(estimate.inputTokens), W));
+      lines.push(this.rightAlign("Output tokens", formatNumber(estimate.outputTokens), W));
+      lines.push(this.rightAlign("Lines added", formatNumber(model.lines_added), W));
+      lines.push(this.rightAlign("Lines deleted", formatNumber(model.lines_deleted), W));
+      lines.push("");
+    }
+
+    // Total
+    lines.push(SEP);
+    lines.push(this.rightAlign("TOTAL", `$${totalCost.toFixed(2)}`, W));
+    lines.push(SEP);
+    lines.push("");
+
+    // Footer
+    lines.push(this.centerText("CASHIER: GitHub Copilot", W));
+    lines.push("");
+    lines.push(this.centerText("Thank you for building!", W));
+    lines.push(this.centerText("github.com/features/copilot", W));
+    lines.push("");
+    lines.push(SEP);
+
+    return lines.join("\n");
+  }
+
   private padLine(
     left: string,
     middle: string,
@@ -202,5 +279,10 @@ export class ReceiptGenerator {
   private capitalize(str: string): string {
     if (!str) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  private rightAlign(label: string, value: string, width: number): string {
+    const space = Math.max(1, width - label.length - value.length);
+    return label + " ".repeat(space) + value;
   }
 }

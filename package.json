@@ -1,6 +1,6 @@
 {
   "name": "copilot-receipts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate quirky, shareable receipts for your GitHub Copilot usage",
   "license": "MIT",
   "repository": {
@@ -23,8 +23,8 @@
     "bin"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "npx tsc",
+    "dev": "npx tsc --watch",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

@@ -37,13 +37,17 @@ export class ConfigManager {
 
   async updateConfig(key: keyof ReceiptConfig, value: string): Promise<void> {
     const config = await this.loadConfig();
+    const normalized = value || undefined; // treat empty string as unset
     switch (key) {
       case "version":
+        config[key] = value || config[key];
+        break;
       case "org":
+      case "enterprise":
       case "token":
       case "location":
       case "timezone":
-        config[key] = value;
+        config[key] = normalized;
         break;
     }
     await this.saveConfig(config);

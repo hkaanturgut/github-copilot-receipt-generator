@@ -3,6 +3,7 @@
 export interface ReceiptConfig {
   version: string;
   org?: string;
+  enterprise?: string;
   token?: string;
   location?: string;
   timezone?: string;

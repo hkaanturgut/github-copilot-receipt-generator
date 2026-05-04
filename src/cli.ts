@@ -41,6 +41,8 @@ program
   )
   .option("-l, --location <text>", "Override location detection")
   .option("--org <name>", "GitHub organization name (overrides config)")
+  .option("--enterprise <slug>", "GitHub Enterprise slug (uses enterprise API endpoint)")
+  .option("--user <login>", "Generate a receipt for a specific user")
   .option("--token <token>", "GitHub token (overrides config and env var)")
   .action(async (options) => {
     const command = new GenerateCommand();

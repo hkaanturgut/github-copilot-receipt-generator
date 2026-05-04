@@ -41,6 +41,31 @@ export interface LanguageBreakdown {
   active_users: number;
 }
 
+export interface ModelBreakdown {
+  model: string;
+  interactions: number;
+  code_generation: number;
+  code_acceptances: number;
+  lines_added: number;
+  lines_deleted: number;
+}
+
+export interface UserUsageRecord {
+  user_login: string;
+  day: string;
+  interactions: number;
+  code_generation: number;
+  code_acceptances: number;
+  lines_added: number;
+  lines_deleted: number;
+  models: ModelBreakdown[];
+  languages: LanguageBreakdown[];
+  editors: string[];
+  used_chat: boolean;
+  used_agent: boolean;
+  used_cli: boolean;
+}
+
 export interface ParsedCopilotUsage {
   date: string;
   totalSuggestions: number;
@@ -55,5 +80,6 @@ export interface ParsedCopilotUsage {
   totalActiveChatUsers: number;
   editorBreakdowns: EditorBreakdown[];
   languageBreakdowns: LanguageBreakdown[];
+  modelBreakdowns: ModelBreakdown[];
   org: string;
 }
