@@ -1,37 +1,50 @@
 # copilot-receipts
 
-Generate quirky, shareable receipts for your GitHub Copilot usage — inspired by [claude-receipts](https://github.com/chrishutchinson/claude-receipts).
+Generate quirky, shareable receipts for your GitHub Copilot usage — with per-model pricing breakdowns. Inspired by [claude-receipts](https://github.com/chrishutchinson/claude-receipts).
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ●  GitHub Copilot  ●
   ╔═══════════════╗
   ║  < / >        ║
   ╚═══════════════╝
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       Location: The Cloud
-          Org: my-org
-      2024-06-24 (Monday)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ITEM                    COUNT   RATE
-─────────────────────────────────────
-CODE COMPLETIONS
-  Suggestions              1,000
-  Acceptances                800   80.0%
-  Lines suggested          1,800
-  Lines accepted           1,000   55.6%
-...
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ACCEPTANCE RATE                80.0%
-LINE ACCEPTANCE                55.6%
-─────────────────────────────────────
-ACTIVE USERS                      10
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      Location: San Francisco, CA
+        User: jane-doe
+           Org: my-org
+         2026-05-02 (Saturday)
+
+════════════════════════════════════════
+Claude-sonnet-4.6                  $1.24
+────────────────────────────────────────
+Interactions                          42
+Code generations                      35
+Acceptances                           28
+Input tokens                     136,500
+Output tokens                     40,600
+Lines added                          310
+Lines deleted                         85
+
+════════════════════════════════════════
+Gpt-5.3-codex                     $0.89
+────────────────────────────────────────
+Interactions                          20
+Code generations                      15
+Acceptances                           12
+Input tokens                      62,500
+Output tokens                     24,020
+Lines added                          180
+Lines deleted                         42
+
+════════════════════════════════════════
+TOTAL                              $2.13
+════════════════════════════════════════
+
         CASHIER: GitHub Copilot
+
         Thank you for building!
-   github.com/features/copilot
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      github.com/features/copilot
+
+════════════════════════════════════════
 ```
 
 ## Installation
@@ -50,6 +63,7 @@ This will:
 - Node.js >= 20.0.0
 - A GitHub organization with **GitHub Copilot Business** or **GitHub Copilot Enterprise** enabled
 - A GitHub token with `read:org` or `manage_billing:copilot` scope
+- For enterprise reports: a token with `enterprise:read` scope
 
 > **Note:** GitHub Copilot's usage API is only available at the organization/enterprise level (not individual accounts).
 
@@ -60,17 +74,20 @@ This will:
 Generate a receipt for your organization's GitHub Copilot usage.
 
 ```bash
-# Most recent available day (console output)
+# Org-level receipt (most recent day)
 npx copilot-receipts generate
 
 # Specific date
-npx copilot-receipts generate --date 2024-06-24
+npx copilot-receipts generate --date 2026-05-02
 
-# HTML receipt (saved to ~/.copilot-receipts/receipts/ and opened in browser)
+# Per-user receipt with pricing breakdown
+npx copilot-receipts generate --user jane-doe --date 2026-05-02
+
+# Enterprise mode
+npx copilot-receipts generate --enterprise my-enterprise --date 2026-05-02
+
+# HTML output
 npx copilot-receipts generate --output html
-
-# Both console and HTML
-npx copilot-receipts generate --output console,html
 
 # Override org and token inline
 npx copilot-receipts generate --org my-org --token ghp_...
@@ -82,6 +99,8 @@ npx copilot-receipts generate --org my-org --token ghp_...
 - `-o, --output <format>` — Output format: `console` (default) or `html` (supports multiple, comma-separated)
 - `-l, --location <text>` — Override location detection
 - `--org <name>` — GitHub organization name (overrides config)
+- `--enterprise <slug>` — GitHub Enterprise slug (uses enterprise API endpoint)
+- `--user <login>` — Generate a receipt for a specific user (with per-model pricing)
 - `--token <token>` — GitHub token (overrides config and `GITHUB_TOKEN` env var)
 
 ### `setup`
@@ -116,12 +135,13 @@ npx copilot-receipts config --reset
 
 **Available settings:**
 
-| Key        | Description                                      |
-|------------|--------------------------------------------------|
-| `org`      | GitHub organization name                         |
-| `token`    | GitHub personal access token                     |
-| `location` | Default location string (otherwise auto-detected) |
-| `timezone` | Timezone for date formatting (e.g. `America/New_York`) |
+| Key          | Description                                      |
+|--------------|--------------------------------------------------|
+| `org`        | GitHub organization name                         |
+| `enterprise` | GitHub Enterprise slug                           |
+| `token`      | GitHub personal access token                     |
+| `location`   | Default location string (otherwise auto-detected) |
+| `timezone`   | Timezone for date formatting (e.g. `America/New_York`) |
 
 ## Configuration
 
@@ -155,9 +175,9 @@ Or add it to a CI/CD pipeline to send receipts to your team.
 
 ## How It Works
 
-1. **GitHub API**: Calls `GET /orgs/{org}/copilot/usage` with your token
-2. **Data Parsing**: Aggregates daily usage by editor and language
-3. **Receipt Generation**: Formats data into a terminal receipt or styled HTML page
+1. **GitHub API**: Calls the Copilot metrics/reports API at the org or enterprise level
+2. **Per-User Data**: When `--user` is specified, fetches per-user daily reports and calculates estimated costs using [GitHub Copilot model pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing)
+3. **Receipt Generation**: Formats data into a terminal receipt or styled HTML page with per-model cost breakdowns
 4. **Location Detection**: Auto-detects your location via IP geolocation (offline, using geoip-lite), or uses your configured location
 5. **HTML Output**: Saves a styled receipt to `~/.copilot-receipts/receipts/` and opens it in your browser
 
