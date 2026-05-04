@@ -1,16 +1,16 @@
 {
-  "name": "copilot-receipts",
-  "version": "1.0.1",
+  "name": "github-copilot-receipt-generator",
+  "version": "1.0.0",
   "description": "Generate quirky, shareable receipts for your GitHub Copilot usage",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hkaanturgut/copilot-receipts.git"
+    "url": "https://github.com/hkaanturgut/github-copilot-receipt-generator.git"
   },
-  "homepage": "https://github.com/hkaanturgut/copilot-receipts#readme",
+  "homepage": "https://github.com/hkaanturgut/github-copilot-receipt-generator#readme",
   "author": "Hakan Kaan Turgut",
   "bugs": {
-    "url": "https://github.com/hkaanturgut/copilot-receipts/issues"
+    "url": "https://github.com/hkaanturgut/github-copilot-receipt-generator/issues"
   },
   "type": "module",
   "main": "./dist/index.js",
