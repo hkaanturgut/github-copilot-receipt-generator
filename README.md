@@ -2,7 +2,7 @@
 
 Generate quirky, shareable receipts for your GitHub Copilot usage — with per-model pricing breakdowns. Inspired by [claude-receipts](https://github.com/chrishutchinson/claude-receipts).
 
-<img width="3024" height="4032" alt="IMG_6932" src="https://github.com/user-attachments/assets/c93d72d6-a15f-4a3b-8d6c-8baa8ff8cf0a" />
+<img width="4284" height="5712" alt="IMG_6933" src="https://github.com/user-attachments/assets/29df6d6a-b674-4f45-9d2d-7766fd32be42" />
 
 
 ## Installation
