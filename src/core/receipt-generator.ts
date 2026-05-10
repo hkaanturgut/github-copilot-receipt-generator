@@ -1,7 +1,6 @@
 import type { ParsedCopilotUsage, UserUsageRecord } from "../types/copilot.js";
 import type { ReceiptConfig } from "../types/config.js";
 import { formatPercent, formatNumber, formatDate } from "../utils/formatting.js";
-import { getHeader, SEPARATOR, LIGHT_SEPARATOR } from "../utils/ascii-art.js";
 import { estimateModelCost } from "../core/pricing.js";
 
 export interface ReceiptData {
@@ -12,167 +11,90 @@ export interface ReceiptData {
 }
 
 export class ReceiptGenerator {
+  private width: number;
+
+  constructor(width = 32) {
+    this.width = this.normalizeWidth(width);
+  }
+
+  setWidth(width: number): void {
+    this.width = this.normalizeWidth(width);
+  }
+
   generateReceipt(data: ReceiptData): string {
     const lines: string[] = [];
     const { usage } = data;
 
-    // Header
-    lines.push(SEPARATOR);
-    lines.push(getHeader());
-    lines.push(SEPARATOR);
+    // Clean header
+    lines.push(this.line());
+    lines.push(this.center("GITHUB COPILOT"));
+    lines.push(this.center("Usage Receipt"));
+    lines.push(this.line());
     lines.push("");
 
     // Meta info
-    lines.push(this.centerText(`Location: ${data.location}`, 35));
-    lines.push(this.centerText(`Org: ${usage.org}`, 35));
-    lines.push(this.centerText(formatDate(usage.date, data.config.timezone), 35));
+    lines.push(this.center(`Org: ${usage.org}`));
+    lines.push(this.center(`Date: ${formatDate(usage.date, data.config.timezone)}`));
+    lines.push(this.center(`Location: ${data.location}`));
+    lines.push("");
+    lines.push(this.line());
     lines.push("");
 
-    // Code completions section
-    lines.push(SEPARATOR);
-    lines.push(this.padLine("ITEM", "COUNT", "RATE"));
-    lines.push(LIGHT_SEPARATOR);
-
-    lines.push(this.boldLabel("Code Completions"));
-    lines.push(
-      this.padLine(
-        "  Suggestions",
-        formatNumber(usage.totalSuggestions),
-        "",
-      ),
-    );
-    lines.push(
-      this.padLine(
-        "  Acceptances",
-        formatNumber(usage.totalAcceptances),
-        formatPercent(usage.acceptanceRate),
-      ),
-    );
-    lines.push(
-      this.padLine(
-        "  Lines suggested",
-        formatNumber(usage.totalLinesSuggested),
-        "",
-      ),
-    );
-    lines.push(
-      this.padLine(
-        "  Lines accepted",
-        formatNumber(usage.totalLinesAccepted),
-        formatPercent(usage.lineAcceptanceRate),
-      ),
-    );
+    // Code completions
+    lines.push("CODE COMPLETIONS");
+    lines.push(this.rightPad("Suggestions", formatNumber(usage.totalSuggestions)));
+    lines.push(this.rightPad("Accepted", formatNumber(usage.totalAcceptances)));
+    lines.push(this.rightPad("Rate", formatPercent(usage.acceptanceRate)));
     lines.push("");
 
-    // Chat section (only if there is chat data)
+    // Chat section
     if (usage.totalChatTurns > 0) {
-      lines.push(this.boldLabel("Copilot Chat"));
-      lines.push(
-        this.padLine(
-          "  Turns",
-          formatNumber(usage.totalChatTurns),
-          "",
-        ),
-      );
-      lines.push(
-        this.padLine(
-          "  Acceptances",
-          formatNumber(usage.totalChatAcceptances),
-          usage.totalChatTurns > 0
-            ? formatPercent(
-                (usage.totalChatAcceptances / usage.totalChatTurns) * 100,
-              )
-            : "—",
-        ),
-      );
-      lines.push(
-        this.padLine(
-          "  Active users",
-          formatNumber(usage.totalActiveChatUsers),
-          "",
-        ),
-      );
+      lines.push("COPILOT CHAT");
+      lines.push(this.rightPad("Chat Turns", formatNumber(usage.totalChatTurns)));
+      lines.push(this.rightPad("Chat Accepted", formatNumber(usage.totalChatAcceptances)));
       lines.push("");
     }
 
-    // Editor breakdown
+    // Editors
     if (usage.editorBreakdowns.length > 0) {
-      lines.push(LIGHT_SEPARATOR);
-      lines.push(this.boldLabel("By Editor"));
-      for (const editor of usage.editorBreakdowns) {
-        const rate =
-          editor.suggestions_count > 0
-            ? formatPercent(
-                (editor.acceptances_count / editor.suggestions_count) * 100,
-              )
-            : "—";
-        lines.push(
-          this.padLine(
-            `  ${this.capitalize(editor.editor)}`,
-            formatNumber(editor.suggestions_count),
-            rate,
-          ),
-        );
+      lines.push("TOP EDITORS");
+      for (const editor of usage.editorBreakdowns.slice(0, 3)) {
+        lines.push(this.rightPad(
+          `  ${this.capitalize(editor.editor)}`,
+          formatNumber(editor.suggestions_count),
+        ));
       }
       lines.push("");
     }
 
-    // Language breakdown
+    // Languages
     if (usage.languageBreakdowns.length > 0) {
-      lines.push(LIGHT_SEPARATOR);
-      lines.push(this.boldLabel("Top Languages"));
-      for (const lang of usage.languageBreakdowns) {
-        const rate =
-          lang.suggestions_count > 0
-            ? formatPercent(
-                (lang.acceptances_count / lang.suggestions_count) * 100,
-              )
-            : "—";
-        lines.push(
-          this.padLine(
-            `  ${this.capitalize(lang.language)}`,
-            formatNumber(lang.suggestions_count),
-            rate,
-          ),
-        );
+      lines.push("TOP LANGUAGES");
+      for (const lang of usage.languageBreakdowns.slice(0, 3)) {
+        lines.push(this.rightPad(
+          `  ${this.capitalize(lang.language)}`,
+          formatNumber(lang.suggestions_count),
+        ));
       }
       lines.push("");
     }
 
-    // Summary totals
-    lines.push(SEPARATOR);
-    lines.push(
-      this.padLine(
-        "ACCEPTANCE RATE",
-        "",
-        formatPercent(usage.acceptanceRate),
-      ),
-    );
-    lines.push(
-      this.padLine("LINE ACCEPTANCE", "", formatPercent(usage.lineAcceptanceRate)),
-    );
-    lines.push(LIGHT_SEPARATOR);
-    lines.push(
-      this.padLine("ACTIVE USERS", "", formatNumber(usage.totalActiveUsers)),
-    );
-    lines.push(SEPARATOR);
+    // Totals
+    lines.push(this.line());
+    lines.push(this.rightPad("Active Users", formatNumber(usage.totalActiveUsers)));
+    lines.push(this.rightPad("Total Users", formatNumber(usage.totalSuggestions)));
     lines.push("");
 
     // Footer
-    lines.push(this.centerText("CASHIER: GitHub Copilot", 35));
+    lines.push(this.center("CASHIER: GitHub Copilot"));
+    lines.push(this.center("Thank you for building!"));
+    lines.push(this.center("github.com/features/copilot"));
     lines.push("");
-    lines.push(this.centerText("Thank you for building!", 35));
-    lines.push(this.centerText("github.com/features/copilot", 35));
-    lines.push("");
-    lines.push(SEPARATOR);
+    lines.push(this.line());
 
     return lines.join("\n");
   }
 
-  /**
-   * Generate a per-user receipt with per-model pricing.
-   * Matches the style of the reference receipt image.
-   */
   generateUserReceipt(data: {
     user: UserUsageRecord;
     location: string;
@@ -181,28 +103,34 @@ export class ReceiptGenerator {
   }): string {
     const lines: string[] = [];
     const { user } = data;
-    const W = 40;
-    const SEP = "═".repeat(W);
-    const DASH = "─".repeat(W);
-
-    // Header
-    lines.push(getHeader());
-    lines.push("");
-
-    // Meta
-    lines.push(this.centerText(`Location: ${data.location}`, W));
-    lines.push(this.centerText(`User: ${user.user_login}`, W));
-    lines.push(this.centerText(`Org: ${data.org}`, W));
-    lines.push(this.centerText(formatDate(user.day, data.config.timezone), W));
-    lines.push("");
-
-    // Per-model sections with pricing (only models with activity)
     let totalCost = 0;
 
+    // Clean header
+    lines.push(this.line());
+    lines.push(this.center("GITHUB COPILOT"));
+    lines.push(this.center("Usage Receipt"));
+    lines.push(this.line());
+    lines.push("");
+
+    // Meta info
+    lines.push(this.center(`User: ${user.user_login}`));
+    lines.push(this.center(`Org: ${data.org}`));
+    lines.push(this.center(`Date: ${formatDate(user.day, data.config.timezone)}`));
+    lines.push(this.center(`Location: ${data.location}`));
+    lines.push("");
+    lines.push(this.line());
+    lines.push("");
+
+    // Per-model sections
     for (const model of user.models) {
-      if (model.interactions === 0 && model.code_generation === 0 && model.code_acceptances === 0 && model.lines_added === 0 && model.lines_deleted === 0) {
+      if (
+        model.interactions === 0 &&
+        model.code_generation === 0 &&
+        model.code_acceptances === 0
+      ) {
         continue;
       }
+
       const estimate = estimateModelCost(
         model.model,
         model.interactions,
@@ -211,78 +139,53 @@ export class ReceiptGenerator {
       );
       totalCost += estimate.cost;
 
-      lines.push(SEP);
-      lines.push(this.rightAlign(
-        this.capitalize(model.model),
-        `$${estimate.cost.toFixed(2)}`,
-        W,
-      ));
-      lines.push(DASH);
-      lines.push(this.rightAlign("Interactions", formatNumber(model.interactions), W));
-      lines.push(this.rightAlign("Code generations", formatNumber(model.code_generation), W));
-      lines.push(this.rightAlign("Acceptances", formatNumber(model.code_acceptances), W));
-      lines.push(this.rightAlign("Input tokens", formatNumber(estimate.inputTokens), W));
-      lines.push(this.rightAlign("Output tokens", formatNumber(estimate.outputTokens), W));
-      lines.push(this.rightAlign("Lines added", formatNumber(model.lines_added), W));
-      lines.push(this.rightAlign("Lines deleted", formatNumber(model.lines_deleted), W));
+      lines.push(this.capitalize(model.model));
+      lines.push(this.rightPad("Interactions", formatNumber(model.interactions)));
+      lines.push(
+        this.rightPad("Code generations", formatNumber(model.code_generation)),
+      );
+      lines.push(this.rightPad("Acceptances", formatNumber(model.code_acceptances)));
+      lines.push(this.rightPad("Cost", `$${estimate.cost.toFixed(2)}`));
       lines.push("");
     }
 
     // Total
-    lines.push(SEP);
-    lines.push(this.rightAlign("TOTAL", `$${totalCost.toFixed(2)}`, W));
-    lines.push(SEP);
+    lines.push(this.line());
+    lines.push(this.rightPad("TOTAL", `$${totalCost.toFixed(2)}`));
     lines.push("");
 
     // Footer
-    lines.push(this.centerText("CASHIER: GitHub Copilot", W));
+    lines.push(this.center("CASHIER: GitHub Copilot"));
+    lines.push(this.center("Thank you for building!"));
+    lines.push(this.center("github.com/features/copilot"));
     lines.push("");
-    lines.push(this.centerText("Thank you for building!", W));
-    lines.push(this.centerText("github.com/features/copilot", W));
-    lines.push("");
-    lines.push(SEP);
+    lines.push(this.line());
 
     return lines.join("\n");
   }
 
-  private padLine(
-    left: string,
-    middle: string,
-    right: string,
-    width: number = 35,
-  ): string {
-    const rightLen = right.length;
-    const leftLen = left.length;
-    const middleLen = middle.length;
-    const totalContent = leftLen + middleLen + rightLen;
-    const availableSpace = width - totalContent;
-
-    if (availableSpace < 0) {
-      return `${left} ${middle} ${right}`;
-    }
-
-    const middleSpace = Math.floor(availableSpace / 2);
-    const rightSpace = availableSpace - middleSpace;
-
-    return left + " ".repeat(middleSpace) + middle + " ".repeat(rightSpace) + right;
+  // Helper methods
+  private line(): string {
+    return "-".repeat(this.width);
   }
 
-  private centerText(text: string, width: number): string {
-    const padding = Math.max(0, Math.floor((width - text.length) / 2));
-    return " ".repeat(padding) + text;
+  private center(text: string): string {
+    const pad = Math.max(0, Math.floor((this.width - text.length) / 2));
+    return " ".repeat(pad) + text;
   }
 
-  private boldLabel(text: string): string {
-    return text.toUpperCase();
+  private rightPad(label: string, value: string): string {
+    const gap = Math.max(1, this.width - label.length - value.length);
+    return label + " ".repeat(gap) + value;
+  }
+
+  private normalizeWidth(width: number): number {
+    if (!Number.isFinite(width)) return 32;
+    return Math.max(20, Math.min(64, Math.trunc(width)));
   }
 
   private capitalize(str: string): string {
     if (!str) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  private rightAlign(label: string, value: string, width: number): string {
-    const space = Math.max(1, width - label.length - value.length);
-    return label + " ".repeat(space) + value;
   }
 }

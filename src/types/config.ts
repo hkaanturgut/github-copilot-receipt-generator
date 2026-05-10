@@ -7,8 +7,10 @@ export interface ReceiptConfig {
   token?: string;
   location?: string;
   timezone?: string;
+  receiptWidth?: number;
 }
 
 export const DEFAULT_CONFIG: ReceiptConfig = {
-  version: "1.0.0",
+  version: "1.1.0",
+  receiptWidth: 32,
 };

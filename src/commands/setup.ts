@@ -63,6 +63,16 @@ export class SetupCommand {
         message: "Timezone (e.g. America/New_York, leave blank for local):",
         initial: "",
       },
+      {
+        type: "number",
+        name: "receiptWidth",
+        message: "Receipt width in characters (20-64, default 32):",
+        initial: 32,
+        validate: (v: number) =>
+          Number.isInteger(v) && v >= 20 && v <= 64
+            ? true
+            : "Enter an integer from 20 to 64",
+      },
     ]);
 
     if (!answers.org || !answers.token) {
@@ -73,12 +83,18 @@ export class SetupCommand {
     const spinner = ora("Saving configuration...").start();
 
     const config: ReceiptConfig = {
-      version: "1.0.0",
+      version: "1.1.0",
       org: answers.org,
       enterprise: answers.enterprise || undefined,
       token: answers.token,
       location: answers.location || undefined,
       timezone: answers.timezone || undefined,
+      receiptWidth:
+        Number.isInteger(answers.receiptWidth) &&
+        answers.receiptWidth >= 20 &&
+        answers.receiptWidth <= 64
+          ? answers.receiptWidth
+          : 32,
     };
 
     await this.configManager.saveConfig(config);

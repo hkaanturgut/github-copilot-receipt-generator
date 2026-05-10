@@ -49,6 +49,19 @@ export class ConfigManager {
       case "timezone":
         config[key] = normalized;
         break;
+      case "receiptWidth": {
+        if (!value.trim()) {
+          config.receiptWidth = DEFAULT_CONFIG.receiptWidth;
+          break;
+        }
+
+        const parsed = Number.parseInt(value, 10);
+        if (!Number.isFinite(parsed) || parsed < 20 || parsed > 64) {
+          throw new Error("receiptWidth must be an integer between 20 and 64.");
+        }
+        config.receiptWidth = parsed;
+        break;
+      }
     }
     await this.saveConfig(config);
   }

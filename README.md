@@ -80,6 +80,9 @@ npx copilot-receipts generate
 # Specific date
 npx copilot-receipts generate --date 2026-05-02
 
+# Tune receipt width for your printer
+npx copilot-receipts generate --width 30
+
 # Per-user receipt with pricing breakdown
 npx copilot-receipts generate --user jane-doe --date 2026-05-02
 
@@ -101,6 +104,7 @@ npx copilot-receipts generate --org my-org --token ghp_...
 - `--org <name>` — GitHub organization name (overrides config)
 - `--enterprise <slug>` — GitHub Enterprise slug (uses enterprise API endpoint)
 - `--user <login>` — Generate a receipt for a specific user (with per-model pricing)
+- `--width <chars>` — Receipt width in characters (`20-64`, overrides config)
 - `--token <token>` — GitHub token (overrides config and `GITHUB_TOKEN` env var)
 
 ### `setup`
@@ -128,6 +132,7 @@ npx copilot-receipts config --set org=my-org
 npx copilot-receipts config --set token=ghp_...
 npx copilot-receipts config --set location="San Francisco, CA"
 npx copilot-receipts config --set timezone="America/Los_Angeles"
+npx copilot-receipts config --set receiptWidth=30
 
 # Reset to defaults
 npx copilot-receipts config --reset
@@ -142,6 +147,7 @@ npx copilot-receipts config --reset
 | `token`      | GitHub personal access token                     |
 | `location`   | Default location string (otherwise auto-detected) |
 | `timezone`   | Timezone for date formatting (e.g. `America/New_York`) |
+| `receiptWidth` | Receipt width in characters (`20-64`, default `32`) |
 
 ## Configuration
 
@@ -153,7 +159,8 @@ Configuration is stored at `~/.copilot-receipts.config.json`.
   "org": "my-org",
   "token": "ghp_...",
   "location": "San Francisco, CA",
-  "timezone": "America/Los_Angeles"
+  "timezone": "America/Los_Angeles",
+  "receiptWidth": 32
 }
 ```
 

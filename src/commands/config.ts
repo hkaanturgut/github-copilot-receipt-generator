@@ -8,6 +8,7 @@ const VALID_KEYS: Array<keyof ReceiptConfig> = [
   "token",
   "location",
   "timezone",
+  "receiptWidth",
 ];
 
 export interface ConfigOptions {

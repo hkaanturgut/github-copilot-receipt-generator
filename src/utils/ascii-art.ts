@@ -11,5 +11,5 @@ export function getHeader(): string {
   return COPILOT_LOGO;
 }
 
-export const SEPARATOR = "━".repeat(35);
-export const LIGHT_SEPARATOR = "─".repeat(35);
+export const SEPARATOR = "━".repeat(32);
+export const LIGHT_SEPARATOR = "─".repeat(32);

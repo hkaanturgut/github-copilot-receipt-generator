@@ -12,7 +12,7 @@ program
   .description(
     "Generate quirky, shareable receipts for your GitHub Copilot usage",
   )
-  .version("1.0.0");
+  .version("1.1.0");
 
 // generate command
 program
@@ -43,7 +43,10 @@ program
   .option("--org <name>", "GitHub organization name (overrides config)")
   .option("--enterprise <slug>", "GitHub Enterprise slug (uses enterprise API endpoint)")
   .option("--user <login>", "Generate a receipt for a specific user")
+  .option("--width <chars>", "Receipt width in characters (20-64, overrides config)")
   .option("--token <token>", "GitHub token (overrides config and env var)")
+  .option("--print", "Print receipt to thermal printer (skip prompt)")
+  .option("--no-print", "Do not print, no prompt")
   .action(async (options) => {
     const command = new GenerateCommand();
     await command.execute(options);
