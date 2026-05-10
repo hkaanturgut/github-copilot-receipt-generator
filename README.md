@@ -2,50 +2,8 @@
 
 Generate quirky, shareable receipts for your GitHub Copilot usage — with per-model pricing breakdowns. Inspired by [claude-receipts](https://github.com/chrishutchinson/claude-receipts).
 
-```
-  ●  GitHub Copilot  ●
-  ╔═══════════════╗
-  ║  < / >        ║
-  ╚═══════════════╝
+<img width="3024" height="4032" alt="IMG_6932" src="https://github.com/user-attachments/assets/c93d72d6-a15f-4a3b-8d6c-8baa8ff8cf0a" />
 
-      Location: San Francisco, CA
-        User: jane-doe
-           Org: my-org
-         2026-05-02 (Saturday)
-
-════════════════════════════════════════
-Claude-sonnet-4.6                  $1.24
-────────────────────────────────────────
-Interactions                          42
-Code generations                      35
-Acceptances                           28
-Input tokens                     136,500
-Output tokens                     40,600
-Lines added                          310
-Lines deleted                         85
-
-════════════════════════════════════════
-Gpt-5.3-codex                     $0.89
-────────────────────────────────────────
-Interactions                          20
-Code generations                      15
-Acceptances                           12
-Input tokens                      62,500
-Output tokens                     24,020
-Lines added                          180
-Lines deleted                         42
-
-════════════════════════════════════════
-TOTAL                              $2.13
-════════════════════════════════════════
-
-        CASHIER: GitHub Copilot
-
-        Thank you for building!
-      github.com/features/copilot
-
-════════════════════════════════════════
-```
 
 ## Installation
 
